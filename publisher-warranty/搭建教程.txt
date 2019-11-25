@@ -1,0 +1,28 @@
+1.将publisher-warranty整个目录放到网站的根目录
+2.通过phpmyadmin创建一个数据库名为odoo,再将data_init里面的数据库文件导入进去，可得到两张表
+3.修改mysql.php文件配置其中的数据库连接信息 $username 和 $password
+4.修改odoo源码中的_get_sys_logs函数，改为以下内容:
+
+    @api.model
+    def _get_sys_logs(self):
+        msg = self._get_message()
+        arguments = {'arg0': ustr(msg), "action": "update"}
+        url = "http://service.playdreamer.cn/publisher-warranty/"
+        r = requests.post(url, data=arguments, timeout=30)
+        r.raise_for_status()
+        if r.text != "注册失败":
+            return literal_eval(r.text)
+        else:
+            raise UserError("注册失败！\n此注册码错误或已被使用")
+            
+5.重启odoo服务即可(不要注释三行js和提示框div 设置display none)
+6.注册时输入mysql上面odoo中的enterprisecodes表里的enterprisecode值即可。注意必须uuid为NULL的才能使用
+uuid有值的表示被用过了。此表可通过后台批量生成。
+
+7.env下面的内容是php+mysql 环境一键搭建
+8.从php7开始官方去掉了mysql_connect连接函数，改用mysqli_connect
+也就是mysql和mysqli的区别，或者用pdo连接数据库。所以需要upupw_np5.6版本
+9. frpc.exe -c frpc-web.ini
+10.访问这个地址验证服务是否正常:http://service.playdreamer.cn/publisher-warranty/admin/ka.php
+
+作者:  hjdhnx   csdn-晚风拂柳颜 qq 434857005

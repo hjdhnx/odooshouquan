@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dash board login</title>
+  <meta name="description" content="particles.js is a lightweight JavaScript library for creating particles.">
+  <meta name="author" content="Vincent Garreau" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" media="screen" href="css/login.css">
+  <link rel="icon" href="img/logo.png" type="image/x-icon">
+</head>
+<body>
+<!-- particles.js container -->
+<div id="particles-js" style="display: flex;align-items: center;justify-content: center">
+</div>
+<div class="login-page">
+   <div class="login-content">
+     <div class="login-tit">用户登录</div>
+     <div class="login-input">
+       <input type="text" id="username" placeholder="用户名/手机号">
+     </div>
+     <div class="login-input">
+      <input type="password" id="password" placeholder="密码">
+    </div>
+    <div class="login-btn">
+      <div class="login-btn-left" onClick="login()">
+        <span>登录</span>
+      </div>
+    
+      <div class="login-btn-right" onClick="changeImg('autologin')">
+        <img src="img/check.png" alt="" id="picture_autologin"> 7天内自动登录
+      </div>
+      <div class="login-btn-right" onClick="changeImg('remember')">
+        <img src="img/check.png" alt="" id="picture_remember"> 记住密码
+      </div>
+    </div>
+   </div>
+</div>
+
+
+<!-- scripts -->
+<script src="js/particles.js"></script>
+<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="sweetalert/sweetalert.css">
+<script type="text/javascript" src="sweetalert/sweetalert-dev.js"></script>
+
+<script>
+document.getElementById('picture_autologin').src ="img/checked.png";
+  function changeImg(pic_id){
+    let pic = document.getElementById('picture_'+pic_id);
+    //console.log(pic.src)
+    if(pic.getAttribute("src",2) =="img/check.png"){
+      pic.src ="img/checked.png"
+    }else{
+      pic.src ="img/check.png"
+    }
+  }
+  function backmsg(ret){
+  if(ret.indexOf("登录成功")>-1){
+  swal("登录提示","登录成功！\n正在进入个人中心","success")
+  window.location.href=window.location.href.replace("login.html","");
+  }
+  else{
+  swal("登录失败！\n用户名或密码错误，请重试！","","error");
+  }
+  }
+  function login(){
+  var username = document.getElementById('username').value;
+  var password = document.getElementById('password').value;
+  var autologin = "no";
+  let pic = document.getElementById('picture_autologin');
+  if(pic.getAttribute("src",2) =="img/checked.png"){
+      autologin = "yes";
+  }
+  console.log(username+"--"+password+'--'+autologin);
+  if (username!="" && password!=""){
+  var json = {"username":username,"password":password,"autologin":autologin,"login":"1"};
+  ajax_post("login.php",json,backmsg);
+  }
+  }
+  
+  function ajax_post(filename,json,func,mode){ //最后一个参数为默认，默认是传入值，设置为1传id
+ 
+        //json={"name":"login_name","pwd":"login_pwd"};           此参数一般长这样    
+        if(!isjson(json)){
+            console.log('参数传入错误，类型非json');
+            return
+        }
+        var xmlhttp;
+        var str="";
+        var data="";
+        if(arguments[3]==true){
+        for(var key in json){ //遍历json里面的键
+            //console.log(key+"--"+document.getElementById(json[key]).value);
+            if(document.getElementById(json[key]).value==""){
+                alert("传入值操作失败，传入参数"+key+"有空值！");
+                return
+            }
+            str = key+"="+document.getElementById(json[key]).value;
+            data += str+"&";   
+        }
+        }
+        else{
+        for(var key in json){ //遍历json里面的键
+             //console.log(key+"--"+json[key]);
+             if(json[key]==""){
+             console.log(key+"---"+"为空");
+                alert("传入ID操作失败，传入参数"+key+"有空值！");
+                return
+            }
+            str = key+"="+json[key];
+            data += str+"&";   
+        }     
+        }
+        data = data.substring(0, data.length - 1);
+         
+        if (window.XMLHttpRequest)
+        {
+            //  IE7+, Firefox, Chrome, Opera, Safari 浏览器执行代码
+            xmlhttp=new XMLHttpRequest();
+        }
+        else
+        {
+            // IE6, IE5 浏览器执行代码
+            xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.onreadystatechange=function()
+        {
+            if (xmlhttp.readyState==4 && xmlhttp.status==200)
+            {
+                //document.getElementById("txtHint").innerHTML=xmlhttp.responseText;
+                var ret=xmlhttp.responseText;
+                func(ret);
+            }
+        }
+            xmlhttp.open("POST",filename+"?t="+Math.random()+"&",true);
+            xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            xmlhttp.send(data);
+  }
+  
+  
+    function isjson(obj){ //判断一个变量对象是否为json。内部变量单双引号都行
+        if(typeof(obj) == "object" && Object.prototype.toString.call(obj).toLowerCase() == "[object object]" && !obj.length){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    function str2obj(str){
+        var obj=eval('(' + str + ')'); //字符串类型转内部类型 如"[1,2,3]" 转换得到[1,2,3]
+        return obj;
+    }
+    function isJSON(str) { //判断字符串是否为json格式。内部变量只能双引号，不能单引号
+        if (typeof str == 'string') {
+            try {
+                //var obj=str.substring(1, str.length - 1);
+                obj=str2obj(str);
+                console.log(obj);
+                if(isjson(obj)){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            } catch(e) {
+                console.log(e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+</script>
+</body>
+</html>
