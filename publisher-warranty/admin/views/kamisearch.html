@@ -26,12 +26,7 @@
     <link rel="stylesheet" type="text/css" href="sweetalert/sweetalert.css">
     <script type="text/javascript" src="sweetalert/sweetalert-dev.js"></script>
     <script>
-	
-	$("#iframe_display").load(function(){//获取iframe中的内容
-	var body = $(window.frames['iframe_display'].document.body);
-	var data = body[0].textContent;;  
-	console.log(data);
-	});
+	var database = window.sessionStorage;
     function showmsg(title,msg){
       var htmltext = '<div class="alert alert-success"><button type="button" class="close" data-dismiss="alert">×</button><h4>'+title+'</h4>'+ msg+'</div>';
       $("div#showmsg").html(htmltext);
@@ -39,12 +34,95 @@
      function urltap(ret){
      $("div#body").html(ret); //除了首页不调用这函数，其他选项卡都调用。
      }
+	 function showdata(page){
+	 $("tbody#kami_list").html(database[page]);
+	 database['nowpage'] = parseInt(page);
+	 }
+	 function nextpage(type){
+	 var nowpage = database['nowpage'];
+	 var pagesize = database["pagesize"];
+	 if(type==1){//上一页
+	 
+	 var gotopage = 1;
+	 if(1<parseInt(nowpage)){
+	 gotopage = parseInt(nowpage)-1;
+	 }
+	 showdata(String(gotopage));
+	 
+	 for(var i=0;i<parseInt(pagesize);i++){
+	 $("li#kamili_"+(i+1))[0].style="display:none"
+	 }
+	 
+	 var st=0;
+	 var end = parseInt(pagesize);
+	 if(gotopage+20<=parseInt(pagesize)){
+	 end = gotopage+20;
+	 }
+	 if(gotopage-20>=0){
+	 st = gotopage-20;
+	 }
+	 
+	 for(var i=st;i<end;i++){
+	 $("li#kamili_"+(i+1))[0].style="display:inline"
+	 }
+	 
+	 }
+	 else if(type==2){//下一页
+	 var gotopage = parseInt(pagesize);
+	 if(parseInt(nowpage) < parseInt(pagesize)){
+	 gotopage = parseInt(nowpage)+1;
+	 }
+	 }
+	 showdata(String(gotopage));
+	 for(var i=0;i<parseInt(pagesize);i++){
+	 $("li#kamili_"+(i+1))[0].style="display:none"
+	 }
+	 var st=0;
+	 var end = parseInt(pagesize);
+	 if(gotopage+20<=parseInt(pagesize)){
+	 end = gotopage+20;
+	 }
+	 if(gotopage-20>=0){
+	 st = gotopage-20;
+	 }
+	 
+	 for(var i=st;i<end;i++){
+	 $("li#kamili_"+(i+1))[0].style="display:inline"
+	 }
+	 
+	 }
      function backmsg(ret){
       swal("提示","查询完毕!\n结果已展示","success");
       if(ret.indexOf("{分隔符}")>-1){
       var msg = ret.split("{分隔符}")[0];
       var htmltext = ret.split("{分隔符}")[1];
-      $("tbody#kami_list").html(htmltext);
+	  var showhtml = htmltext.split("</tr>");
+	  var showtext = "";
+	  var showli = "";
+	  for(var i=0;i<100;i++){
+		showtext+=showhtml[i]+"</tr>";
+	  }
+	  for(var i=1;i<= Math.ceil(showhtml.length/100);i++){
+		var a="";
+		var j=(i-1)*100;
+		if(j<=showhtml.length-100){
+		for(var k=j;k<j+100;k++){
+		a+=showhtml[k]+"</tr>";
+		}
+		}
+		else{
+		for(var k=j;k<showhtml.length;k++){
+		a+=showhtml[k]+"</tr>";
+		}
+		}
+		database[String(i)]=a;
+		showli+="<li style=\"display:none\" id=\"kamili_"+i+"\"><a href=\"javascript:showdata("+i+")\">"+i+"</a></li>";
+	  }
+	  database['nowpage'] = 1;
+	  database["pagesize"] = Math.ceil(showhtml.length/100);
+	  showli = '<li><a href="javascript:showdata(1)">首页</a></li><li><a href="javascript:nextpage(1)">上一页</a></li>'+showli+'<li><a href="javascript:nextpage(2)">下一页</a></li><li><a href="javascript:showdata('+database["pagesize"]+')">末页</a></li>';
+	  $("ul#kami_li").html(showli);
+      $("tbody#kami_list").html(showtext);
       showmsg("查询完毕",msg);
       return;
       }
@@ -174,7 +252,10 @@
         $("li#searchkami")[0].className="active";
     };
     }
-    
+    //********************************分页组件的实现
+	
+	
+	//********************************
     function ajax_get(filename,json,func,mode){ //最后一个参数为默认，默认是传入值，设置为1传id
  
         //json={"name":"login_name","pwd":"login_pwd"};           此参数一般长这样    
@@ -476,7 +557,7 @@
 				</tbody>
 			</table>
 			<div class="pagination">
-				<ul>
+				<ul id="kami_li">
 					<li>
 						<a href="#">上一页</a>
 					</li>
